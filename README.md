@@ -1,4 +1,4 @@
-<h3>SkyLite / SkyNet web development framework</h3>br><br>
+<h3>SkyLite / SkyNet web development framework</h3><br>
 
 <h4>SKYLITE framework (C#/VB)</h4>
 Platform: IIS / .Net framework 4.5 + <br>
