@@ -1,9 +1,9 @@
 <h3>SkyLite / SkyNet web development framework</h3>br><br>
 
-<h4>SKYLITE framework (C#/VB)</h4><br>
-Platform: IIS / .Net framework 4.5 +<br>
+<h4>SKYLITE framework (C#/VB)</h4>
+Platform: IIS / .Net framework 4.5 + <br>
 
-<h4>SKYNET framework (C# only)</h4><br>
+<h4>SKYNET framework (C# only)</h4>
 Platform: ASP.NET Core / .NET 10<br>
 Architecture: Middleware-based<br>
 <br>
