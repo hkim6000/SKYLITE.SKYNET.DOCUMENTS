@@ -11,5 +11,4 @@ Download GitHub: https://github.com/hkim6000/SkyNetDemo-AspNetCore<br>
 <br>
 support: hkim6000@gmail.com<br>
 <br>
-All Technical Reviews & Manuals are created by AI after training<br>
-There is no author's opinion.<br>
+ 
