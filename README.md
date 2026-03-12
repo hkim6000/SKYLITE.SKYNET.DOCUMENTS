@@ -9,6 +9,4 @@ Technical Documents : https://www.theskylite.com/document<br>
 Showcase Demo. Site: https://www.theskylite.com/SkyLiteProject<br>
 Download GitHub: https://github.com/hkim6000/SkyNetDemo-AspNetCore<br>
 <br>
-support: hkim6000@gmail.com<br>
-<br>
  
