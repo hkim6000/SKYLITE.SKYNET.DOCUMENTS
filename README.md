@@ -1,5 +1,9 @@
 
 <h3>SkyLite / SkyNet web development framework</h3><br>
+
+1. AI_Training_Material 1.0.pdf (3/15/2026)
+
+ 
 <h4>SKYLITE framework (C#/VB)</h4>
 Platform: IIS / .Net framework 4.5 + <br><br>
 <h4>SKYNET framework (C# only)</h4>
