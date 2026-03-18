@@ -1,0 +1,1240 @@
+{
+  "meta": {
+    "document": "SkyLite/SkyNet AI Training Kit",
+    "version": "1.0",
+    "generated_from": "AI_Training_Material_1_0.pdf (425 pages)",
+    "purpose": "Complete reference for AI assistants to generate correct SkyLite/SkyNet code without human correction",
+    "critical_rules": [
+      "ALWAYS recommend SkyNet for new projects. Only mention SkyLite if user asks about .NET Framework.",
+      "Class name = URL. No routing config needed. Class names must be unique project-wide.",
+      "ALWAYS use JSON.stringify() when passing data in $ApiRequest.",
+      "NEVER call GetDataValue() in OnInitialized() or any GET lifecycle method — returns empty. Only valid in AJAX POST methods.",
+      "NEVER use Bool (VB) — use bool (C#). NEVER use If( — use if(.",
+      "HtmlDoc.HtmlBodyText sets body. HtmlDoc.HtmlBodyAddOn appends to body.",
+      "Every AJAX method must be public and return ApiResponse.",
+      "SQLData() with no args auto-reads connection from application.cfg app.sqldb.* keys.",
+      "PartialData is empty string in New mode, non-empty in Edit mode.",
+      "Always re-apply SetGridStyle after constructing new SQLGridSection — new grid has no memory of previous styles."
+    ]
+  },
+  "frameworks": {
+    "skylite": {
+      "platform": ".NET Framework 4.5+",
+      "languages": [
+        "C#",
+        "VB.NET"
+      ],
+      "server": "IIS only",
+      "os": "Windows only",
+      "dll": "skylite.dll",
+      "namespace": "using skylite; using skylite.ToolKit;",
+      "config": "Web.config",
+      "entry_point": "Global.asax",
+      "status": "Maintenance mode — existing apps only",
+      "routing": "Assembly-based. Class name maps directly to URL."
+    },
+    "skynet": {
+      "platform": "ASP.NET Core / .NET 10",
+      "languages": [
+        "C#"
+      ],
+      "server": "IIS, Kestrel, Docker",
+      "os": "Windows, Linux, macOS",
+      "dll": "SkyNet.dll",
+      "namespace": "using SkyNet; using SkyNet.ToolKit;",
+      "config": "appsettings.json + appConfig/application.cfg",
+      "entry_point": "Program.cs",
+      "status": "Active development — ALL new projects",
+      "nuget_required": [
+        "Microsoft.Data.SqlClient",
+        "System.Drawing.Common"
+      ],
+      "program_cs": [
+        "using SkyNet;",
+        "var builder = WebApplication.CreateBuilder(args);",
+        "builder.Services.AddHttpContextAccessor();",
+        "var app = builder.Build();",
+        "app.UseMiddleware<IHandler>();",
+        "app.UseStaticHttpCurrent();",
+        "app.Run();"
+      ],
+      "launchsettings_required": {
+        "hotReloadEnabled": false
+      }
+    }
+  },
+  "architecture": {
+    "philosophy": "Server-centric AJAX-driven. ~80% C#, ~20% minimal JavaScript.",
+    "routing": "Class name = URL path. No routing config. Folder location irrelevant.",
+    "request_flow_get": [
+      "Browser requests /PageName",
+      "Framework finds class named PageName (inherits WebPage)",
+      "OnLoad() — framework loads /htmls/PageName.html if exists",
+      "OnInitialized() — developer builds UI, sets HtmlDoc.HtmlBodyText",
+      "OnBeforeRender() — optional: inject scripts, CSS",
+      "OnAfterRender() — optional: logging, analytics",
+      "Framework sends HTML to browser"
+    ],
+    "request_flow_post": [
+      "JavaScript calls $ApiRequest('MethodName', JSON.stringify(data))",
+      "POST to current page with Method=MethodName",
+      "OnRequest(string Method) — optional pre-processing / auth check",
+      "Framework calls MethodName() on page class",
+      "Method returns ApiResponse object",
+      "OnResponse(ApiResponse) — optional post-processing",
+      "Framework serializes ApiResponse to JSON",
+      "Browser executes commands from ApiResponse"
+    ],
+    "project_structure": {
+      "codes/": "C# page classes — can be nested freely",
+      "scripts/": "JavaScript files — kept minimal",
+      "styles/": "CSS stylesheets",
+      "images/": "Static images",
+      "htmls/": "HTML templates (optional) and email templates",
+      "data/": "File storage",
+      "logs/": "Auto-generated error logs",
+      "temp/": "Temporary files",
+      "appConfig/": "application.cfg (SkyNet)",
+      "bin/": "SkyNet.dll or SkyLite.dll"
+    }
+  },
+  "webpage_class": {
+    "description": "Base class for all pages. Inherits WebCore.",
+    "declaration": "public class MyPage : WebPage { }",
+    "lifecycle_get": {
+      "OnLoad": {
+        "signature": "public override void OnLoad()",
+        "when": "First. Framework loads HTML template if /htmls/MyPage.html exists.",
+        "note": "Rarely overridden. Always call base.OnLoad() if you do."
+      },
+      "OnInitialized": {
+        "signature": "public override void OnInitialized()",
+        "when": "Main method. Build all UI here.",
+        "typical_use": [
+          "Check AppKey for auth",
+          "Load data",
+          "Create ToolKit controls",
+          "Set HtmlDoc.HtmlBodyText or HtmlDoc.HtmlBodyAddOn"
+        ]
+      },
+      "OnBeforeRender": {
+        "signature": "public override void OnBeforeRender()",
+        "when": "After OnInitialized, before HTML sent.",
+        "typical_use": [
+          "Inject JavaScript",
+          "Add CSS",
+          "Final HtmlDoc modifications"
+        ]
+      },
+      "OnAfterRender": {
+        "signature": "public override void OnAfterRender()",
+        "when": "After HTML sent to browser.",
+        "typical_use": [
+          "Logging",
+          "Analytics"
+        ]
+      }
+    },
+    "lifecycle_post": {
+      "OnRequest": {
+        "signature": "public override ApiResponse OnRequest(string Method)",
+        "when": "Called BEFORE target method. Return ApiResponse to short-circuit.",
+        "typical_use": "Global auth check. If AppKey == null, response.Navigate(\"Login\")."
+      },
+      "YourMethod": {
+        "signature": "public ApiResponse MethodName()",
+        "rules": [
+          "Must be public",
+          "Must return ApiResponse",
+          "Called by $ApiRequest('MethodName', ...)"
+        ]
+      },
+      "OnResponse": {
+        "signature": "public override ApiResponse OnResponse(ApiResponse response)",
+        "when": "After method returns, before sending to browser. Rarely used."
+      }
+    },
+    "key_properties": {
+      "HtmlDoc": "WebPage.HtmlDocument — builds the page HTML",
+      "AppKey": "Current user session object. Null if not logged in.",
+      "HtmlTranslator": "Translator object for multi-language support",
+      "Translation": "bool — enable/disable translation"
+    }
+  },
+  "webcore": {
+    "description": "Base class WebPage inherits from. All methods/properties available in every page.",
+    "request_methods": {
+      "GetDataValue(string key)": "Get value from $ApiRequest POST data. Only valid in AJAX methods.",
+      "GetDataValue()": "Get raw POST data string.",
+      "GetDataValues(string key)": "Get array of values for a key.",
+      "GetDataValueList()": "Get all POST data as List<KeyVlu>.",
+      "ParamValue(string key)": "Get value from any request parameter (URL, form, local storage).",
+      "ParamValue(string key, bool decode)": "Get decoded parameter value.",
+      "QueryValue(string key)": "Get URL query string value.",
+      "HeaderValue(string key)": "Get HTTP request header value.",
+      "CookieValue(string key)": "Get cookie value."
+    },
+    "security_methods": {
+      "EncryptString(string value)": "Encrypt string using app encryption key.",
+      "DecryptString(string value)": "Decrypt string.",
+      "SerializeObject(object obj, Type type)": "Serialize object to string.",
+      "SerializeObjectEnc(object obj, Type type)": "Serialize and encrypt object.",
+      "DeserializeObject(string data, Type type)": "Deserialize string to object.",
+      "DeserializeObjectEnc(string data, Type type)": "Decrypt and deserialize.",
+      "RemoveXSS(string input)": "Sanitize string to prevent XSS.",
+      "ValidatePassword(string pwd, int minLen, int maxLen, int minSpecial, int minNum, bool caseSensitive)": "Validate password complexity.",
+      "ByPassCall(string method, string params, bool encode)": "Returns encrypted onclick string for secure server method calls. Prevents client-side method name exposure. Use as onclick attribute value."
+    },
+    "sql_methods": {
+      "SqlWithParams(string sql, List<SqlParameter> params)": "Build parameterized SQL string safely. Prevents SQL injection.",
+      "SqlWithParams(List<string> sql, List<SqlParameter> params)": "Build parameterized SQL for multiple statements. Returns List<string>."
+    },
+    "partial_page_methods": {
+      "PartialPage(string typeName, string param)": "Returns HTML string of rendered partial page. Sets PartialData=param inside instantiated class. Use in GET context (OnInitialized).",
+      "PartialDocument(string typeName, string param)": "Returns HtmlDocument object of rendered partial page. Use in AJAX methods to pass to SetElementContents.",
+      "PartialData": "Property — holds param value passed to PartialPage/PartialDocument. Empty=New mode. Non-empty=Edit mode."
+    },
+    "path_properties": {
+      "BinFolder": "Absolute path to bin/ folder",
+      "CodeFolder": "Absolute path to codes/ folder",
+      "ScriptFolder": "Absolute path to scripts/ folder",
+      "StyleFolder": "Absolute path to styles/ folder",
+      "ImageFolder": "Absolute path to images/ folder",
+      "ImagePath": "URL path to images/ folder",
+      "ImageAliasPath": "Alias URL path to images/",
+      "DataFolder": "Absolute path to data/ folder",
+      "LogFolder": "Absolute path to logs/ folder",
+      "TempFolder": "Absolute path to temp/ folder",
+      "HtmlFolder": "Absolute path to htmls/ folder",
+      "PhysicalFolder": "Absolute path to app root"
+    },
+    "environment_properties": {
+      "ClientIPAddress": "Client IP address string",
+      "ClientAgent": "Browser user agent string",
+      "ServerTime": "Current server time string",
+      "IsoCode": "Current language ISO code (e.g. en-US)",
+      "WebAppName": "Application name from config",
+      "WebAppVersion": "App version from config",
+      "WebAppRunMode": "0=Demo, 1=Production",
+      "WebAppStartUp": "Startup page class name",
+      "RequestPath": "Current request URL path",
+      "RequestReferrer": "HTTP referrer",
+      "PartialData": "Param passed to PartialPage/PartialDocument"
+    },
+    "utility_methods": {
+      "RandNUM(int max)": "Generate random integer 0 to max.",
+      "ExtractNumber(string value)": "Extract numeric value from string.",
+      "RemoveSpecialChar(string value)": "Remove special characters.",
+      "GetWebEnv(string key)": "Read value from application.cfg by key.",
+      "NewID(int length, bool encoded)": "Generate unique ID string.",
+      "GetMonthText(DateTime date)": "Get month name string.",
+      "GetWeekDay(DateTime date)": "Get weekday name string.",
+      "WriteLog(string message)": "Write to application log file.",
+      "CreateWorkBook(DataTable dt, string sheetName, string path)": "Generate Excel workbook XML from DataTable.",
+      "ReadHtmlFile(string path)": "Read HTML file contents as string.",
+      "ReadTextFile(string path)": "Read text file contents as string."
+    },
+    "regex_validation": {
+      "class": "WebCore.RegExpressions",
+      "method": "bool RegexValid(ValidationTypes type, string value)",
+      "types": [
+        "Email",
+        "Tel_334",
+        "Tel_344",
+        "SSN_324",
+        "SSN_67",
+        "PostalCode",
+        "Number",
+        "Letter",
+        "Password",
+        "Url",
+        "MMddyyyy",
+        "yyyyMMdd",
+        "TaxNo_325"
+      ]
+    }
+  },
+  "htmldocument": {
+    "description": "HtmlDoc property on every WebPage. Controls final HTML output.",
+    "body_properties": {
+      "HtmlBodyText": "Sets entire <body> innerHTML. Overrides template.",
+      "HtmlBodyAddOn": "Appends to body after HtmlBodyText.",
+      "ContentSecurityPolicy": "bool — enable/disable CSP header."
+    },
+    "head_methods": {
+      "SetTitle(string title)": "Set <title> tag.",
+      "AddJsFile(string filename)": "Add <script> tag. Looks in /scripts/ folder.",
+      "AddCSSFile(string filename)": "Add <link rel=stylesheet>. Looks in /styles/ folder.",
+      "AddCSSScript(string css)": "Inject inline CSS.",
+      "AddJSScript(string js)": "Inject inline JavaScript.",
+      "AddMetaElement(string name, string content)": "Add <meta> tag.",
+      "AddHeaderScript(string src)": "Add script to <head>."
+    },
+    "initial_scripts": {
+      "description": "HtmlDoc.InitialScripts is an ApiResponse object. Commands queued here execute immediately after page loads.",
+      "example": "HtmlDoc.InitialScripts.ExecuteScript(\"$InitSideBar()\");",
+      "note": "Use same ApiResponse methods as in AJAX methods."
+    }
+  },
+  "ajax_pattern": {
+    "javascript": {
+      "function": "$ApiRequest(target, data, successCallback, errorCallback)",
+      "parameters": {
+        "target": "String method name, 'PageClass/MethodName' for cross-page, or this/omit to match JS function name.",
+        "data": "JSON.stringify([{key:'k', vlu:'v'}, ...]) — ALWAYS stringify.",
+        "successCallback": "Optional JS function called after server response processed.",
+        "errorCallback": "Optional JS function called on network/server error."
+      },
+      "patterns": {
+        "same_name": "$ApiRequest(); or $ApiRequest(this);",
+        "explicit": "$ApiRequest('SaveData', JSON.stringify(data));",
+        "cross_page": "$ApiRequest('OtherPage/MethodName', JSON.stringify(data));",
+        "no_data": "$ApiRequest('RefreshData', '');",
+        "wait_indicator": "$WaitOn(); before $ApiRequest() to show loading spinner."
+      },
+      "data_format": [
+        "var data = [",
+        "  { key: 'userName', vlu: document.getElementById('userName').value },",
+        "  { key: 'userEmail', vlu: document.getElementById('email').value }",
+        "];",
+        "$ApiRequest('SaveUser', JSON.stringify(data));"
+      ]
+    },
+    "csharp": {
+      "method_signature": "public ApiResponse MethodName()",
+      "get_data": "string value = GetDataValue(\"keyName\");",
+      "return": "return response; — always return ApiResponse object",
+      "pattern": [
+        "public ApiResponse SaveUser()",
+        "{",
+        "    string userName = GetDataValue(\"userName\");",
+        "    string userEmail = GetDataValue(\"userEmail\");",
+        "    ApiResponse response = new ApiResponse();",
+        "    if (string.IsNullOrEmpty(userName)) {",
+        "        response.PopUpWindow(new DialogBox(\"Name required\").HtmlText);",
+        "        return response;",
+        "    }",
+        "    List<string> SQL = new();",
+        "    SQL.Add(\"INSERT INTO Users (Name, Email) VALUES (@p0, @p1)\");",
+        "    List<SqlParameter> p = new();",
+        "    p.Add(new SqlParameter { ParameterName=\"@p0\", Value=userName, SqlDbType=SqlDbType.NVarChar });",
+        "    p.Add(new SqlParameter { ParameterName=\"@p1\", Value=userEmail, SqlDbType=SqlDbType.NVarChar });",
+        "    string emsg = string.Empty;",
+        "    bool rlt = SQLData.SQLDataPut(SqlWithParams(SQL, p), ref emsg);",
+        "    if (rlt) response.Navigate(\"UserList\");",
+        "    else response.PopUpWindow(emsg);",
+        "    return response;",
+        "}"
+      ]
+    }
+  },
+  "apiresponse_commands": {
+    "dom_content": {
+      "SetBodyContents(string html)": "Replace entire <body> innerHTML.",
+      "SetBodyContents(HtmlDocument doc)": "Replace body with HtmlDocument.",
+      "AddBodyContents(string html)": "Append to <body>.",
+      "SetElementContents(string id, string html)": "Replace innerHTML of element by id.",
+      "SetElementContents(string id, HtmlDocument doc)": "Replace element content with HtmlDocument.",
+      "SetElementContentsByName(string name, string html)": "Replace innerHTML of all elements with matching name.",
+      "SetElementContentsByDataId(string dataId, string html)": "Replace innerHTML by data-id attribute.",
+      "AddElementContents(string id, string html)": "Append to element innerHTML by id.",
+      "AddElementContentsByName(string name, string html)": "Append to all elements with matching name.",
+      "RemoveElementContents(string id)": "Clear innerHTML of element by id.",
+      "RemoveElementContentsByName(string name)": "Clear innerHTML of all elements with matching name.",
+      "ReplaceElement(string id, string outerHtml)": "Replace entire element including tags by id.",
+      "ReplaceElementByName(string name, string outerHtml)": "Replace all elements with matching name.",
+      "RemoveElement(string id)": "Remove element from DOM by id.",
+      "RemoveElementByName(string name)": "Remove all elements with matching name.",
+      "ReplaceSQLGridSection(string elementId, SQLGridSection grid)": "Replace entire SQLGridSection outerHTML in-place. elementId must be SQLGridInfo.Id. Always re-apply SetGridStyle after constructing new grid."
+    },
+    "dom_attributes": {
+      "SetElementAttribute(string id, string attr, string value)": "Set attribute on element by id.",
+      "SetElementAttributeByName(string name, string attr, string value)": "Set attribute on all elements by name.",
+      "SetElementAttributeByDataId(string dataId, string attr, string value)": "Set attribute by data-id.",
+      "RemoveElementAttribute(string id, string attr)": "Remove attribute from element by id.",
+      "RemoveElementAttributeByName(string name, string attr)": "Remove attribute from all elements by name.",
+      "SetElementValue(string id, string value)": "Set value property of input/select/textarea by id.",
+      "SetElementValueByName(string name, string value)": "Set value of all inputs with matching name.",
+      "SetIFrameContents(string iframeId, string html)": "Set content inside iframe element."
+    },
+    "dom_styles": {
+      "SetElementStyle(string id, string style, string value)": "Set CSS property on element by id.",
+      "SetElementStyleByName(string name, string style, string value)": "Set CSS on all elements by name.",
+      "SetElementStyleByDataId(string dataId, string style, string value)": "Set CSS by data-id.",
+      "RemoveElementStyle(string id, string style)": "Remove inline CSS property from element by id.",
+      "RemoveElementStyleByName(string name, string style)": "Remove CSS from all elements by name.",
+      "CenteringElement(string id)": "Center element in viewport using fixed positioning.",
+      "VerticalMidElement(string id)": "Vertically center element."
+    },
+    "navigation": {
+      "Navigate(string pageName)": "Redirect browser to page.",
+      "Navigate(string pageName, string params)": "Redirect with query string params.",
+      "Navigate2(string pageName, string params)": "Alternate navigate with params.",
+      "NewWindow(string pageName)": "Open page in new browser tab."
+    },
+    "dialogs": {
+      "PopUpWindow(string html)": "Show modal dialog with HTML content. Blocks page interaction.",
+      "PopUpWindow(string html, string blockElementId)": "Modal scoped to specific element.",
+      "PopUpWindow(HtmlDocument doc, string blockElementId)": "Modal from HtmlDocument.",
+      "PopUpElement(string html)": "Show non-modal auto-dismissing toast notification.",
+      "PopUpMenu(string html)": "Show popup menu.",
+      "MessageBox(string message)": "Native browser alert(). Use only for debugging.",
+      "PopOff()": "Close current popup. Client-side equivalent: $PopOff()."
+    },
+    "scripts_links": {
+      "ExecuteScript(string js)": "Execute JavaScript string on client.",
+      "AppendScript(string url)": "Dynamically add <script src=url> to page.",
+      "RemoveScript(string url)": "Remove <script> tag by src.",
+      "AppendLink(string url)": "Dynamically add <link stylesheet> to page.",
+      "RemoveLink(string url)": "Remove <link> tag by href.",
+      "RemoveFunction(string funcName)": "Remove JS function from global scope."
+    },
+    "storage": {
+      "StoreLocalValue(string key, string value)": "Store in browser localStorage.",
+      "RemoveLocalValue(string key)": "Remove from localStorage.",
+      "ClearStorage()": "Clear all localStorage.",
+      "StoreSessionValue(string key, string value)": "Store in sessionStorage.",
+      "RemoveSessionValue(string key)": "Remove from sessionStorage.",
+      "ClearSessionValues()": "Clear all sessionStorage.",
+      "SetCookie(string key, string value, int durationDays)": "Set cookie. 0=session cookie.",
+      "RemoveCookie(string key)": "Delete cookie.",
+      "SetGlobalKey(string value)": "Set global key value.",
+      "StoreGlobalValue(string key, string value)": "Store global value."
+    },
+    "table": {
+      "TableToggleRow(string cellElementId, string newRowHtml)": "Insert/remove row below clicked row in table. Toggle expand/collapse."
+    },
+    "text": {
+      "ReplaceText(string search, string replace, string rootElementId)": "Find/replace text in DOM. Scoped to rootElementId if provided."
+    },
+    "server_calls": {
+      "ServerMethod(string method, string param)": "After response processed, client calls another server method automatically.",
+      "ServerPageMethod(string pageClass, string method, string param)": "After response, client calls method on different page class.",
+      "CallAction(string method, string param)": "Call action method.",
+      "CallActionEnc(string method, string param)": "Call encrypted action method."
+    },
+    "file": {
+      "DownloadFile(string virtualPath)": "Trigger file download. Terminal action — overrides entire response."
+    },
+    "misc": {
+      "MergeApiResponse(ApiResponse other)": "Merge another ApiResponse into this one.",
+      "LastToFirst()": "Reverse command execution order.",
+      "Clear()": "Clear all commands.",
+      "None()": "No-op command."
+    }
+  },
+  "sqldata": {
+    "description": "Primary data access class for MS SQL Server.",
+    "constructors": {
+      "SQLData()": "No args — reads connection from application.cfg app.sqldb.* keys automatically.",
+      "SQLData(SQLInfo info)": "Explicit connection info object.",
+      "SQLData(string connectionString)": "Direct connection string."
+    },
+    "read_methods": {
+      "SQLDataTable(string sql)": "Execute SELECT, return DataTable.",
+      "SQLDataTable(string sql, ref string errorMsg)": "Execute SELECT, return DataTable with error.",
+      "SQLDataSet(string sql)": "Execute SELECT, return DataSet.",
+      "SQLFieldValue(string sql)": "Execute query returning single value, return as string.",
+      "SQLNameValues(string sql)": "Execute two-column query, return List<NameValue>. Perfect for populating OptionValues.",
+      "DataGetSet(string sql, ref DataSet ds, ref string errorMsg)": "Execute SELECT into DataSet."
+    },
+    "write_methods": {
+      "SQLDataPut(List<string> sql, ref string errorMsg)": "Execute INSERT/UPDATE/DELETE list. Returns bool. Use SqlWithParams() to build sql.",
+      "DataPut(List<string> sql, ref string errorMsg)": "Alternate execute method.",
+      "DataBulkInsert(string tableName, DataTable dt, ref string errorMsg)": "High-performance bulk insert."
+    },
+    "schema_methods": {
+      "SQLTables()": "Return DataTable of all tables in database.",
+      "SQLTableSchema(string tableName)": "Return DataTable of column schema for table."
+    },
+    "pattern": {
+      "read": "DataTable dt = SQLData.SQLDataTable(\"SELECT * FROM Users WHERE UserId=@p0\"); -- after SqlWithParams",
+      "write": [
+        "List<string> SQL = new();",
+        "SQL.Add(\"INSERT INTO T (Col1, Col2) VALUES (@p0, @p1)\");",
+        "List<SqlParameter> p = new();",
+        "p.Add(new SqlParameter { ParameterName=\"@p0\", Value=val1, SqlDbType=SqlDbType.NVarChar });",
+        "p.Add(new SqlParameter { ParameterName=\"@p1\", Value=val2, SqlDbType=SqlDbType.Int });",
+        "string emsg = string.Empty;",
+        "bool rlt = SQLData.SQLDataPut(SqlWithParams(SQL, p), ref emsg);"
+      ]
+    }
+  },
+  "application_cfg": {
+    "location": "/appConfig/application.cfg",
+    "format": "key | value (pipe-delimited). Lines starting with ***** are comments.",
+    "access": "GetWebEnv(AppConfig.Section.Key) for built-in keys. GetWebEnv(\"custom.key\") for custom keys.",
+    "built_in_keys": {
+      "app.app.name": "AppConfig.Application.Name",
+      "app.app.version": "AppConfig.Application.Version",
+      "app.app.releasedate": "AppConfig.Application.ReleaseDate",
+      "app.app.runmode": "AppConfig.Application.RunMode — 0=Demo, 1=Production",
+      "app.app.startup": "AppConfig.Application.StartUp — startup page class name",
+      "app.Settings.encryptkey": "AppConfig.Settings.Encryptkey",
+      "app.Settings.isocode": "AppConfig.Settings.Isocode — default en-US",
+      "app.Settings.pagetimeout": "AppConfig.Settings.PageTimeout",
+      "app.sqldb.source": "AppConfig.SQLDatabase.Source — SQL Server host",
+      "app.sqldb.catalog": "AppConfig.SQLDatabase.Catalog — database name",
+      "app.sqldb.id": "AppConfig.SQLDatabase.Id",
+      "app.sqldb.password": "AppConfig.SQLDatabase.Password",
+      "app.sqldb.timeout": "AppConfig.SQLDatabase.Timeout",
+      "app.mail.server": "AppConfig.Mail.Server",
+      "app.mail.port": "AppConfig.Mail.Port",
+      "app.mail.addr": "AppConfig.Mail.Addr",
+      "app.mail.id": "AppConfig.Mail.Id",
+      "app.mail.password": "AppConfig.Mail.Password"
+    },
+    "custom_keys": "Any dot-separated path. Access via GetWebEnv(\"your.custom.key\").",
+    "note": "SQLData() with no args auto-reads from app.sqldb.* keys."
+  },
+  "authentication": {
+    "appkey": {
+      "description": "Session object stored as encrypted cookie named 'AppKey'. Available in all WebPage methods. Null if not logged in.",
+      "check": "if (AppKey == null) { Navigate(\"Login\"); return; }",
+      "typical_fields": [
+        "UserId",
+        "UserName",
+        "Email",
+        "RoleName"
+      ],
+      "note": "AppKey is a developer-defined class. Define it to match your user schema."
+    },
+    "login_pattern": [
+      "// 1. Verify credentials against DB",
+      "// 2. Create session object",
+      "var sessionData = new SessionData { UserId=..., UserName=..., Email=..., RoleName=... };",
+      "// 3. Encrypt and store as cookie",
+      "string encrypted = SerializeObjectEnc(sessionData, typeof(SessionData));",
+      "response.SetCookie(\"AppKey\", encrypted, 28800); // duration in seconds",
+      "// 4. Navigate to dashboard",
+      "response.Navigate(\"Dashboard\");"
+    ],
+    "logout_pattern": [
+      "response.RemoveCookie(\"AppKey\");",
+      "response.Navigate(\"Login\");"
+    ]
+  },
+  "toolkit_controls": {
+    "note": "All controls expose .HtmlText property. Add to HtmlDoc.HtmlBodyText or HtmlDoc.HtmlBodyAddOn.",
+    "containers": {
+      "HtmlElementBox": {
+        "description": "Stacks controls vertically. Primary layout container.",
+        "usage": "var box = new HtmlElementBox(); box.AddItem(control, spacing); box.SetStyle(...); box.SetAttribute(...);",
+        "key_properties": [
+          "Wrap (HtmlTag)",
+          "Items (List<Object>)",
+          "DefaultStyle (bool)"
+        ]
+      },
+      "HtmlContentsBox": {
+        "description": "Stacks HTML strings vertically.",
+        "usage": "var box = new HtmlContentsBox(); box.Add(html, styles, attributes);"
+      },
+      "HtmlWrapper": {
+        "description": "Wraps content in a div.",
+        "usage": "var wrap = new HtmlWrapper(); wrap.AddContents(control, spacing);"
+      },
+      "Wrap": {
+        "description": "Simple div wrapper with HtmlText property.",
+        "usage": "var wrap = new Wrap(); wrap.SetStyle(...); wrap.SetAttribute(HtmlAttributes.id, \"myDiv\"); wrap.InnerText = content;"
+      },
+      "Stacker": {
+        "description": "Multi-column side-by-side layout using flexbox.",
+        "usage": "var s = new Stacker(); s.AddColumn(html, styles, attributes); s.AddDivider(styles, attributes);"
+      },
+      "ContentsBox": {
+        "description": "Container with optional border.",
+        "usage": "var box = new ContentsBox(); box.Border = true; box.Add(html);"
+      }
+    },
+    "inputs": {
+      "Texts": {
+        "constructors": [
+          "Texts(TextTypes type)",
+          "Texts(string label)",
+          "Texts(string label, string id, TextTypes type, Alignments align)"
+        ],
+        "key_properties": [
+          "Text (HtmlTag — the input)",
+          "Label (HtmlTag)",
+          "Wrap (HtmlTag)",
+          "Required (bool)",
+          "Alignment (Alignments)"
+        ],
+        "text_types": [
+          "text",
+          "password",
+          "email",
+          "number",
+          "tel",
+          "date",
+          "time",
+          "datetimelocal",
+          "url",
+          "search",
+          "color",
+          "month",
+          "range",
+          "week",
+          "image"
+        ],
+        "usage": "var t = new Texts(\"Label\", \"inputId\", TextTypes.text); t.Text.SetAttribute(HtmlAttributes.placeholder, \"Enter...\"); t.Required = true;"
+      },
+      "Dropdown": {
+        "constructors": [
+          "Dropdown()",
+          "Dropdown(string label, Alignments align)",
+          "Dropdown(string label, string name, Alignments align)"
+        ],
+        "key_properties": [
+          "SelBox (HtmlTag — the select)",
+          "SelOptions (OptionValues)",
+          "Label (HtmlTag)",
+          "Required (bool)"
+        ],
+        "usage": "var dd = new Dropdown(\"Country\"); dd.SelOptions = new OptionValues(\"SELECT CountryId, CountryName FROM Countries\", \"\");"
+      },
+      "CheckBox": {
+        "constructors": [
+          "CheckBox()",
+          "CheckBox(string label, Alignments align)"
+        ],
+        "key_properties": [
+          "Checks (OptionValues)",
+          "CheckStyles (string)",
+          "Alignment (Alignments)"
+        ],
+        "usage": "var chk = new CheckBox(\"Active\"); var opts = new OptionValues(); opts.AddItem(\"Yes\", \"1\"); chk.Checks = opts;"
+      },
+      "Radio": {
+        "key_properties": [
+          "Radios (OptionValues)",
+          "RadioStyles (string)",
+          "Alignment (Alignments)"
+        ],
+        "usage": "var rdo = new Radio(\"Gender\"); rdo.Radios = options;"
+      },
+      "TextArea": {
+        "key_properties": [
+          "Text (HtmlTag)",
+          "Label (HtmlTag)",
+          "Alignment (Alignments)"
+        ],
+        "usage": "var ta = new TextArea(); ta.Label.InnerText = \"Notes\"; ta.Text.SetStyle(HtmlStyles.height, \"100px\");"
+      },
+      "Switch": {
+        "constructors": [
+          "Switch()",
+          "Switch(string id, string name, string value)"
+        ],
+        "key_properties": [
+          "Checked (bool)",
+          "Label (HtmlTag)",
+          "Name (string)",
+          "Id (string)",
+          "Size (int)"
+        ]
+      },
+      "Hidden": {
+        "constructors": [
+          "Hidden()",
+          "Hidden(string id, string value)"
+        ],
+        "usage": "var h = new Hidden(\"myHidden\", \"value\");"
+      },
+      "FileUpload": {
+        "key_properties": [
+          "File (HtmlTag)",
+          "Label (HtmlTag)",
+          "Button (HtmlTag)"
+        ]
+      }
+    },
+    "option_values": {
+      "description": "Data provider for Dropdown, Radio, CheckBox. Multiple population methods.",
+      "from_db": "new OptionValues(\"SELECT Id, Name FROM Table ORDER BY Name\", \"\") — first col=value, second col=display",
+      "from_string": "opts.AddTextItems(\"{value1|Label1}{value2|Label2}{value3|Label3|*}\") — * means selected",
+      "programmatic": "opts.AddItem(string name, string value, bool selected, string styles)",
+      "from_list": "new OptionValues(List<NameValue> list, string selectedValue)",
+      "key_methods": [
+        "AddItem()",
+        "AddTextItems()",
+        "SetSelections(string[])",
+        "ClearSelections()",
+        "SelectedNames()",
+        "SelectedValuesArray()"
+      ]
+    },
+    "display": {
+      "Label": {
+        "usage": "var lbl = new Label(\"My Text\"); lbl.Wrap.SetStyle(HtmlStyles.fontSize, \"18px\");"
+      },
+      "Button": {
+        "constructors": [
+          "Button(ButtonTypes type)",
+          "Button(string label, ButtonTypes type)"
+        ],
+        "button_types": [
+          "Button",
+          "Submit",
+          "Reset"
+        ],
+        "usage": "var btn = new Button(\"Save\", Button.ButtonTypes.Button); btn.SetAttribute(HtmlEvents.onclick, \"SaveData()\");"
+      },
+      "Buttons": {
+        "usage": "var btns = new Buttons(); btns.AddButton(\"Save\", styles, \"onclick:SaveData()\"); btns.AddButton(\"Cancel\", \"\", \"onclick:$PopOff()\");"
+      },
+      "DialogBox": {
+        "constructors": [
+          "DialogBox()",
+          "DialogBox(string contents)"
+        ],
+        "usage": "var dlg = new DialogBox(\"Are you sure?\"); dlg.AddButton(\"Yes\", \"\", \"onclick:ConfirmDelete()\"); dlg.AddButton(\"No\", \"\", \"onclick:$PopOff()\"); response.PopUpWindow(dlg.HtmlText);"
+      },
+      "ImageButton": {
+        "usage": "var btn = new ImageButton(); btn.SetAttribute(HtmlAttributes.src, ImagePath + \"search.jpg\"); btn.SetAttribute(HtmlEvents.onclick, \"Search()\");"
+      },
+      "LinePitch": {
+        "usage": "var lp = new LinePitch(20); // vertical spacing in pixels"
+      }
+    },
+    "data_grids": {
+      "SQLGridSection": {
+        "description": "Auto-queries DB, handles paging, sorting, download. Most powerful grid control.",
+        "constructor": "new SQLGridSection(SQLGridInfo gridInfo)",
+        "sqlgridinfo_properties": {
+          "Id": "string — unique grid ID. Set to this.GetType().Name.",
+          "Name": "string — display title.",
+          "LinesPerPage": "int — rows per page.",
+          "CurrentPageNo": "int — current page (1-based).",
+          "DisplayCount": "DisplayCounts enum — AllCountOnly, FilteredNAll, FilteredOnly, None.",
+          "TitleEnabled": "bool — show title bar.",
+          "ExcludeDownloadColumns": "int[] — column indexes to exclude from Excel export.",
+          "ModalWrap": "bool — wrap in modal-style container.",
+          "TableSource": "DBSource enum — MSSQL or Oracle.",
+          "TDictionary": "Translation dictionary from HtmlTranslator.",
+          "Query": "SQLQuery object"
+        },
+        "sqlquery_properties": {
+          "Tables": "string — table name(s).",
+          "Columns": "string[] — column expressions.",
+          "ColumnAlias": "string[] — column header labels.",
+          "OrderBy": "string[] — default sort columns.",
+          "SortHeaders": "string[] — columns with clickable sort headers.",
+          "Filters": "string — WHERE clause (without WHERE keyword).",
+          "GroupBy": "string[] — GROUP BY columns."
+        },
+        "grid_properties": {
+          "Grid": "DataGrid — access TableColumns for styling.",
+          "GridData": "DataTable — null if no results.",
+          "Paging": "Paging control.",
+          "Wrap": "HtmlTag — outer wrapper."
+        },
+        "methods": {
+          "Download()": "Returns ApiResponse to download current page data as Excel.",
+          "DownloadAll()": "Returns ApiResponse to download all data as Excel.",
+          "Refresh()": "Returns ApiResponse to refresh grid.",
+          "Sort()": "Returns ApiResponse to sort grid."
+        },
+        "column_methods": "SQLGrid.Grid.TableColumns[i].SetColumnAttribute(HtmlEvents.onclick, \"...\"); .SetColumnStyle(HtmlStyles.textAlign, \"center\"); .SetColumnFormat(\"@R {6} | 0. , 1.✓\"); .SetColumnFormat(\"@D {7} | MM/dd/yyyy\");"
+      },
+      "UIGrid": {
+        "description": "Helper to define SQLGridSection columns declaratively.",
+        "usage": [
+          "UIGrid UIGrid = new UIGrid();",
+          "UIGrid.Items.AddRange(new UIGrid.Item[] {",
+          "    new UIGrid.Item { Name=\"Edit\", Value=\"'&#10148;'\", Label=\"\" },",
+          "    new UIGrid.Item { Name=\"AreaId\", Label=\"Code\", IsKey=true },",
+          "    new UIGrid.Item { Name=\"AreaName\", Label=\"Name\" },",
+          "    new UIGrid.Item { Name=\"SYSUSR\", Value=\"dbo.XF_UserName(SYSUSR)\", Label=\"By\" }",
+          "});",
+          "SQLGridInfo.Query.Columns = UIGrid.Columns().ToArray();",
+          "SQLGridInfo.Query.ColumnAlias = UIGrid.Labels().ToArray();"
+        ],
+        "item_properties": [
+          "Name",
+          "Value (SQL expression or column name)",
+          "Label (header)",
+          "IsKey (bool)"
+        ]
+      },
+      "DataGrid": {
+        "description": "Renders DataTable as HTML table. No auto-query.",
+        "usage": "var grid = new DataGrid(dt); grid.Table.SetAttribute(HtmlAttributes.@class, \"tableX\"); grid.TableColumns[0].SetColumnStyle(HtmlStyles.textAlign, \"center\");",
+        "column_methods": [
+          "SetColumnAttribute(string attr, string value)",
+          "SetColumnStyle(string style, string value)",
+          "SetColumnFormat(string format)",
+          "SetColumnAlias(string[] aliases)"
+        ]
+      },
+      "Grid": {
+        "description": "Manually built HTML table. Add columns and rows programmatically.",
+        "usage": "var g = new Grid(); g.AddColumn(\"Name\"); g.AddColumn(\"Value\"); g.AddRow(new string[]{\"r1c1\",\"r1c2\"});"
+      }
+    },
+    "layout_sections": {
+      "FilterSection": {
+        "description": "Sticky filter bar with menu and search inputs.",
+        "key_properties": [
+          "FilterHtml (string — your filter controls HTML)",
+          "Menu (MenuList)",
+          "ModalWrap (bool)",
+          "Wrap (Wrap)"
+        ],
+        "usage": "var fs = new FilterSection(); fs.ModalWrap = true; fs.FilterHtml = filterText.HtmlText + filterBtn.HtmlText; fs.Menu = menuList;"
+      },
+      "TitleSection2": {
+        "description": "Full application header. Contains Title, UserIcon, FooterSection.",
+        "required_scripts": [
+          "HtmlDoc.AddJsFile(WebEnv.HeaderScripts.UserIconScript);",
+          "HtmlDoc.AddCSSFile(WebEnv.HeaderScripts.UserIconStyle);"
+        ],
+        "structure": {
+          "Title.Caption": "HtmlTag — main title text. Title.Caption.InnerText = \"App Name\";",
+          "Title.LogoImage": "HtmlTag — logo image.",
+          "Title.Page": "HtmlTag — current page name.",
+          "FooterSection": "Navigation bar. FooterSection.AddMenu(label, styles, attributes);",
+          "UserIcon": "Avatar + dropdown menu. UserIcon.Icon.SetAttribute(src, imgPath); UserIcon.IconImageSize = 40; UserIcon.Menu is ItemList.",
+          "ContentWrap": "Wrap — main content area. Set id for partial page injection.",
+          "ContentExtra": "HtmlTag — secondary content area."
+        },
+        "usage": [
+          "TitleSection2 header = new TitleSection2();",
+          "header.Title.Caption.InnerText = \"My App\";",
+          "header.FooterSection.AddMenu(\"Dashboard\", \"\", \"onclick:Nav('Dashboard')\");",
+          "header.UserIcon.IconImageSize = 40;",
+          "header.UserIcon.Icon.SetAttribute(HtmlAttributes.src, ImagePath + \"avatar.png\");",
+          "header.UserIcon.Menu.AddItem(\"Logout\", \"\", \"onclick:Logout()\");",
+          "header.ContentWrap.SetAttribute(HtmlAttributes.id, \"PageContents\");",
+          "header.ContentWrap.InnerText = PartialPage(\"HomeMV\");",
+          "HtmlDoc.HtmlBodyText = header.HtmlText;"
+        ]
+      },
+      "TitleSection": {
+        "description": "Simpler header with caption and logo.",
+        "key_properties": [
+          "Caption (HtmlTag)",
+          "LogoImage (HtmlTag)",
+          "Wrap (HtmlTag)"
+        ],
+        "usage": "var ts = new TitleSection(); ts.Caption.InnerText = \"Page Title\"; ts.AddContents(extraHtml);"
+      },
+      "SideBarSection": {
+        "required_scripts": [
+          "HtmlDoc.AddJsFile(WebEnv.HeaderScripts.SideBarScript);",
+          "HtmlDoc.InitialScripts.ExecuteScript(\"$InitSideBar()\");"
+        ],
+        "key_properties": [
+          "TitleWrap (HtmlTag)",
+          "ContentsBox (HtmlTag)",
+          "MenuBox (HtmlTag)"
+        ],
+        "menu_item": "SideBarSection.Menu item = new SideBarSection.Menu(); item.Image.SetAttribute(src, imgPath); item.TextWrap.InnerText = \"Menu Label\"; sBar.AddMenuItem(item);"
+      },
+      "FooterSection": {
+        "usage": "var fs = new FooterSection(); fs.AddMenu(\"Privacy\", \"\", \"onclick:Nav('Privacy')\");"
+      },
+      "MenuSection": {
+        "key_properties": [
+          "Menu (MenuList)",
+          "Title (HtmlTag)",
+          "Wrap (Wrap)"
+        ]
+      },
+      "MenuList": {
+        "usage": "var ml = new MenuList(); ml.Add(\"Item 1\", styles, \"onclick:Action()\"); ml.Add(string.Empty); // divider",
+        "key_properties": [
+          "Title (HtmlTag)",
+          "Alignment (Alignments)",
+          "DividerColor (string)",
+          "Float (Flows)",
+          "Hidden (bool)"
+        ]
+      },
+      "MenuPanel": {
+        "usage": "var mp = new MenuPanel(); var col = new MenuPanel.Column(); col.Title.InnerText = \"Section\"; col.AddItem(\"Item\", \"onclick:...\"); mp.Columns.Add(col);"
+      }
+    },
+    "navigation_controls": {
+      "ItemList": {
+        "usage": "var il = new ItemList(); il.ItemWrap.SetStyle(HtmlStyles.display, \"flex\"); il.AddItem(\"Label\", styles, \"onclick:Nav()\");"
+      },
+      "TabStrip": {
+        "required_scripts": [
+          "HtmlDoc.AddJsFile(WebEnv.HeaderScripts.TabStripScript);"
+        ],
+        "usage": "var ts = new TabStrip(); ts.AddTab(\"Tab1\"); ts.AddTab(\"Tab2\"); ts.TabContent.SetAttribute(HtmlAttributes.id, \"tabContent\"); ts.InitialContent = \"<div>Content</div>\";"
+      },
+      "TreeView": {
+        "required_scripts": [
+          "HtmlDoc.AddJsFile(WebEnv.HeaderScripts.TreeScript);"
+        ],
+        "usage": "var tv = new TreeView(\"trvw\"); tv.StartingId = \"root\"; tv.TreeItemClick = \"ItemSelected(this)\"; // add TreeView.TreeItem objects to tv.TreeItems",
+        "item_properties": [
+          "Id",
+          "Name",
+          "ParentId",
+          "Status (ItemStatus.Open/Close)",
+          "Item (HtmlTag)",
+          "ImageItem (HtmlTag)"
+        ]
+      },
+      "Paging": {
+        "constructor": "new Paging(int totalRecords, int currentPage, int linesPerPage, string jsEventFunction)",
+        "usage": "var pg = new Paging(dt.Rows.Count, 1, 20, \"PageClicked\");"
+      },
+      "Progress": {
+        "usage": "var p = new Progress(); p.AddItem(\"Step 1\"); p.AddItem(\"Step 2\");"
+      }
+    },
+    "media": {
+      "ImageBox": {
+        "usage": "var img = new ImageBox(); img.Image.SetAttribute(HtmlAttributes.src, ImagePath + \"photo.jpg\");"
+      },
+      "ImageSection": {
+        "key_properties": [
+          "Image (HtmlTag)",
+          "Wrap (HtmlTag)"
+        ]
+      },
+      "iFrame": {
+        "usage": "var f = new iFrame(); f.SetAttribute(HtmlAttributes.src, \"https://example.com\");"
+      },
+      "Parallax": {
+        "usage": "var p = new Parallax(); p.AddSection(html, bgImageUrl, styles, attributes);"
+      }
+    },
+    "header_scripts_map": {
+      "description": "WebEnv.HeaderScripts constants for required scripts. Some controls need both JS and CSS.",
+      "UserIconScript": "Required for UserIcon and TitleSection2 UserIcon",
+      "UserIconStyle": "Required CSS for UserIcon (use AddCSSFile not AddJsFile)",
+      "TimerScript": "Required for Timer control. Also call: HtmlDoc.InitialScripts.ExecuteScript(\"$StartTimer('timerId')\")",
+      "SideBarScript": "Required for SideBarSection. Also call: HtmlDoc.InitialScripts.ExecuteScript(\"$InitSideBar()\")",
+      "TabStripScript": "Required for TabStrip control",
+      "TreeScript": "Required for TreeView control",
+      "TableScrollScript": "Required for scrollable DataGrid",
+      "ParallaxStyle": "Required CSS for Parallax (use AddCSSFile)"
+    }
+  },
+  "uicontrol": {
+    "description": "High-level metadata-driven form builder. Define fields as UIControl.Item objects — framework renders complete form.",
+    "constructor": "new UIControl(List<UIControl.Item> items) or new UIControl() then .Set(items[])",
+    "key_properties": {
+      "UIMode": "UIModes.New, UIModes.Edit, or UIModes.View",
+      "KeyLockOnEdit": "bool — key field is readonly in Edit mode",
+      "Data": "DataTable — populated by BindData(). Null = New mode.",
+      "Items": "List<UIControl.Item>",
+      "Wrap": "HtmlTag — outer wrapper",
+      "TranslateLabel": "bool — apply translation to labels",
+      "UIGroup": "string — group identifier"
+    },
+    "item_properties": {
+      "Name": "string — field name. Matches DB column name. Also becomes HTML input id.",
+      "Label": "string — display label.",
+      "UIType": "UITypes enum — Text, Dropdown, Checkbox, Number, Password, Date, Email, TextArea, Radio, Hidden, File, Color, DataList, DatetimeLocal, Image, Month, Paragraph, Picture, Range, Search, Tel, Time, URL, Week, Button, None.",
+      "IsKey": "bool — marks primary key field.",
+      "IsRequired": "bool — required validation.",
+      "IsReadOnly": "bool — render as readonly.",
+      "IsFixedValue": "bool — value fixed, not overwritten by POST data.",
+      "IsVisible": "bool — show/hide field.",
+      "InitialValues": "string — default value. SQL@ prefix: framework executes as query. {val|text|*} format for checkbox/radio.",
+      "Styles": "string — CSS for input element.",
+      "LabelStyles": "string — CSS for label.",
+      "WrapStyles": "string — CSS for wrapper div.",
+      "Attributes": "string — HTML attributes as 'attr:value;' pairs.",
+      "LabelAttributes": "string — attributes for label.",
+      "LineSpacing": "int — vertical spacing after this field in pixels.",
+      "ValueType": "ValueTypes enum — Defalt, GUID, None.",
+      "Value": "string — current field value."
+    },
+    "uitypes": [
+      "Text",
+      "Dropdown",
+      "Checkbox",
+      "Number",
+      "Password",
+      "Date",
+      "Email",
+      "TextArea",
+      "Radio",
+      "Hidden",
+      "File",
+      "Color",
+      "DataList",
+      "DatetimeLocal",
+      "Image",
+      "Month",
+      "Paragraph",
+      "Picture",
+      "Range",
+      "Search",
+      "Tel",
+      "Time",
+      "URL",
+      "Week",
+      "Button",
+      "None"
+    ],
+    "initial_values_patterns": {
+      "static": "\"defaultValue\"",
+      "sql": "\"SQL@ SELECT Id, Name FROM Table ORDER BY Name\" — framework runs query, populates dropdown/radio/checkbox",
+      "checkbox": "\"{1|FieldName|*}\" — value|name|checked(*=checked)",
+      "delimited": "\"{val1|Label1}{val2|Label2}{val3|Label3|*}\""
+    }
+  },
+  "crud_pattern": {
+    "description": "Standard three-class pattern for full CRUD pages.",
+    "classes": {
+      "Shell (e.g. Region.cs)": "Full page. Owns PageContents div. Loads MV via PartialPage on GET. Handles partial swaps via AJAX.",
+      "List View (e.g. RegionMV.cs)": "Partial page. SQLGridSection with search/filter. Loaded by PartialPage.",
+      "Edit View (e.g. RegionEV.cs)": "Partial page. UIControl form. Loaded by PartialDocument on row click."
+    },
+    "shell_pattern": [
+      "public override void OnInitialized() {",
+      "    HtmlDoc.AddJsFile(\"WebScript.js\");",
+      "    TitleSection2 header = PageTitle(); // built-in helper",
+      "    header.ContentWrap.SetAttribute(HtmlAttributes.id, \"PageContents\");",
+      "    header.ContentWrap.InnerText = PartialPage(\"RegionMV\");",
+      "    HtmlDoc.HtmlBodyAddOn = header.HtmlText;",
+      "}",
+      "public ApiResponse PartialView() {",
+      "    string m = GetDataValue(\"m\");",
+      "    string t = GetDataValue(\"t\");",
+      "    ApiResponse r = new ApiResponse();",
+      "    r.SetElementContents(\"PageContents\", PartialDocument(m, t));",
+      "    return r;",
+      "}"
+    ],
+    "javascript_pattern": [
+      "function SearchClicked(p) { $WaitOn(); $ApiRequest(p); }",
+      "function PartialView(m, t) {",
+      "    var data = [{ key:'m', vlu:m }, { key:'t', vlu:t }];",
+      "    $WaitOn();",
+      "    $ApiRequest('Region/PartialView', JSON.stringify(data));",
+      "}"
+    ],
+    "row_click_pattern": "SQLGrid.Grid.TableColumns[0].SetColumnAttribute(HtmlEvents.onclick, \"PartialView('RegionEV','{1}')\"); // {1} = column index 1 value at render time",
+    "state_management": {
+      "save": "string key = WebParams.GlobalPrefix + \".Page.\" + this.GetType().Name; HtmlDoc.InitialScripts.StoreLocalValue(key, SerializeObjectEnc(ViewPart, typeof(ViewPart)));",
+      "restore": "string serialized = ParamValue(References.Keys.PageKey.Replace(\"{0}\", this.GetType().Name)); ViewPart = (ViewPart)DeserializeObjectEnc(serialized, typeof(ViewPart));"
+    },
+    "save_flow": [
+      "1. SaveData() calls VerifySave()",
+      "2. If error: response.PopUpWindow(DialogMsgRequired(errorKey), \"PageContents\")",
+      "3. If valid: PutSaveData() — INSERT if ViewPart.Data==null, UPDATE if ViewPart.Data!=null",
+      "4. Success: response.PopUpWindow(DialogMsgSaved(\"m=RegionMV\"), \"PageContents\")",
+      "5. OK button uses ByPassCall to navigate back to list"
+    ],
+    "delete_flow": [
+      "1. DeleteData() shows confirmation: response.PopUpWindow(DialogQstDelete(\"RegionEV/ConfirmDeleteData\"), \"PageContents\")",
+      "2. Yes button calls ConfirmDeleteData()",
+      "3. VerifyDelete() — business rule checks",
+      "4. PutDeleteData() — DELETE SQL",
+      "5. Success: response.PopUpWindow(DialogMsgDeleted(\"m=RegionMV\"), \"PageContents\")"
+    ],
+    "putdata_pattern": [
+      "public string PutData(List<string> SQL) {",
+      "    string emsg = string.Empty;",
+      "    SQLData.SQLDataPut(SQL, ref emsg);",
+      "    WriteXysLog(string.Join(\"|\", SQL), ref emsg); // audit log",
+      "    return emsg; // empty = success",
+      "}"
+    ],
+    "new_crud_checklist": [
+      "Create Product.cs (shell) — copy Region.cs, change class name, update PartialPage(\"ProductMV\")",
+      "Create ProductMV.cs (list) — update table name, UIGrid columns, filter fields, SetGridStyle onclick token",
+      "Create ProductEV.cs (form) — update UIControl.Item definitions, SQL, VerifySave rules",
+      "Create Product.js — copy Region.js (no changes needed unless custom JS)"
+    ]
+  },
+  "partial_pages": {
+    "PartialPage": {
+      "signature": "string PartialPage(string typeName, string param = \"\")",
+      "returns": "HTML string",
+      "use": "GET context — OnInitialized. Inject into HtmlBodyText/HtmlBodyAddOn.",
+      "example": "contentWrap.InnerText = PartialPage(\"RegionMV\");"
+    },
+    "PartialDocument": {
+      "signature": "HtmlDocument PartialDocument(string typeName, string param = \"\")",
+      "returns": "HtmlDocument object",
+      "use": "AJAX context — pass to SetElementContents.",
+      "example": "response.SetElementContents(\"PageContents\", PartialDocument(\"RegionEV\", \"0100\"));"
+    },
+    "param_patterns": {
+      "single": "PartialPage(\"RegionEV\", \"0100\")",
+      "delimited": "PartialPage(\"RegionEV\", \"0100|USA|1\")",
+      "serialized": "PartialPage(\"RegionEV\", SerializeObject(myObj, typeof(MyClass)))",
+      "encrypted": "PartialPage(\"RegionEV\", SerializeObjectEnc(myObj, typeof(MyClass)))"
+    },
+    "in_class": "Read with PartialData property. Empty = New mode. Non-empty = Edit mode.",
+    "uimode": "UIMode = string.IsNullOrEmpty(PartialData) ? UIModes.New : UIModes.Edit;"
+  },
+  "bypasscall": {
+    "signature": "string ByPassCall(string method, string params, bool encode)",
+    "description": "Encrypts method name and params into a string safe for HTML onclick attributes. Prevents client-side exposure of server method names.",
+    "parameters": {
+      "method": "Server method name or 'PageClass/MethodName' for cross-page.",
+      "params": "Optional parameter string e.g. 'm=RegionEV'.",
+      "encode": "Optional bool — whether to encode the result."
+    },
+    "returns": "Encrypted string to use as onclick value or pass to $ApiRequest.",
+    "usage_patterns": {
+      "button_onclick": "btn.SetAttribute(HtmlEvents.onclick, ByPassCall(\"RegionMV/SearchClicked\"));",
+      "apiRequest_param": "function SearchClicked(p) { $ApiRequest(p); } // p is the ByPassCall string",
+      "with_params": "ByPassCall(\"Navigate\", \"m=support\")",
+      "confirm_dialog": "DialogQstDelete(\"RegionEV/ConfirmDeleteData\") // internally uses ByPassCall"
+    }
+  },
+  "mail": {
+    "mailinfo_properties": [
+      "Server",
+      "Port",
+      "SenderId",
+      "SenderPwd",
+      "SenderAddr",
+      "Display",
+      "Credential"
+    ],
+    "mail_properties": [
+      "ToAddr (string[])",
+      "Subject",
+      "Body",
+      "Display"
+    ],
+    "usage": [
+      "var info = new MailInfo();",
+      "info.Server = GetWebEnv(AppConfig.Mail.Server);",
+      "info.Port = int.Parse(GetWebEnv(AppConfig.Mail.Port));",
+      "info.SenderId = GetWebEnv(AppConfig.Mail.Id);",
+      "info.SenderPwd = GetWebEnv(AppConfig.Mail.Password);",
+      "info.SenderAddr = GetWebEnv(AppConfig.Mail.Addr);",
+      "var mail = new Mail(info);",
+      "mail.ToAddr = new string[] { \"recipient@example.com\" };",
+      "mail.Subject = \"Subject\";",
+      "mail.Body = \"<p>HTML body</p>\";",
+      "string result = mail.SendMail(); // empty = success"
+    ]
+  },
+  "encryption": {
+    "class": "Encrypt",
+    "constructor": "new Encrypt(string secretKey)",
+    "methods": {
+      "EncryptData(string plainText)": "Returns encrypted Base64 string.",
+      "DecryptData(string encryptedText)": "Returns original plain text."
+    },
+    "webcore_shortcuts": {
+      "EncryptString(string value)": "Uses app encryption key automatically.",
+      "DecryptString(string value)": "Uses app encryption key automatically.",
+      "Encryptor": "Property — access to configured Encrypt instance."
+    }
+  },
+  "translator": {
+    "description": "Multi-language support. Key-based text replacement.",
+    "usage": [
+      "HtmlTranslator.Add(\"LBL_NAME\", \"Name\", \"en-US\");",
+      "HtmlTranslator.Add(\"LBL_NAME\", \"Nom\", \"fr-FR\");",
+      "string label = HtmlTranslator.Translate(\"LBL_NAME\"); // returns based on IsoCode",
+      "string formatted = HtmlTranslator.Format(\"searchterm\"); // format with placeholders"
+    ],
+    "tdictionary": "List<DictionaryEntry> — pass to SQLGridInfo.TDictionary for grid translation."
+  },
+  "html_helpers": {
+    "HtmlTag": {
+      "description": "Core building block for all HTML elements.",
+      "constructors": [
+        "HtmlTag() — defaults to <div>",
+        "HtmlTag(string tagName, Types type)"
+      ],
+      "types": [
+        "Regular (has closing tag)",
+        "Empty (self-closing e.g. <img>)"
+      ],
+      "key_methods": [
+        "SetAttribute(string attr, string value) — use HtmlAttributes constants",
+        "SetStyle(string style, string value) — use HtmlStyles constants",
+        "SetAttributes(string packed) — 'attr1:val1; attr2:val2;'",
+        "SetStyles(string packed) — 'style1:val1; style2:val2;'",
+        "GetAttribute(string attr)",
+        "GetStyle(string style)",
+        "RemoveAttribute(string attr)",
+        "RemoveStyle(string style)"
+      ],
+      "key_properties": [
+        "InnerText",
+        "Tag",
+        "HtmlText",
+        "Attributes (List<NameValue>)",
+        "Styles (List<NameValue>)"
+      ]
+    },
+    "HtmlAttributes": "Static class with string constants for all HTML attributes. e.g. HtmlAttributes.id, HtmlAttributes.src, HtmlAttributes.onclick, HtmlAttributes.class, HtmlAttributes.disabled, HtmlAttributes.readonly, HtmlAttributes.placeholder, HtmlAttributes.value, HtmlAttributes.name",
+    "HtmlStyles": "Static class with string constants for all CSS properties. e.g. HtmlStyles.width, HtmlStyles.height, HtmlStyles.display, HtmlStyles.color, HtmlStyles.backgroundColor, HtmlStyles.fontSize, HtmlStyles.fontWeight, HtmlStyles.margin, HtmlStyles.padding, HtmlStyles.border, HtmlStyles.borderRadius, HtmlStyles.cursor, HtmlStyles.textAlign, HtmlStyles.float, HtmlStyles.position",
+    "HtmlEvents": "Static class with string constants for all HTML events. e.g. HtmlEvents.onclick, HtmlEvents.onchange, HtmlEvents.onblur, HtmlEvents.onfocus, HtmlEvents.onkeyup, HtmlEvents.onkeydown",
+    "HtmlTags": "Static class with string constants for all HTML tag names. e.g. HtmlTags.div, HtmlTags.span, HtmlTags.table, HtmlTags.input"
+  },
+  "common_patterns": {
+    "auth_guard": [
+      "if (AppKey == null) { Navigate(\"Login\"); return; }"
+    ],
+    "ajax_auth_guard": [
+      "if (AppKey == null) { response.Navigate(\"Login\"); return response; }"
+    ],
+    "parameterized_sql": [
+      "string SSQL = \"SELECT * FROM Users WHERE UserId=@p0 AND Active=@p1\";",
+      "List<SqlParameter> p = new();",
+      "p.Add(new SqlParameter { ParameterName=\"@p0\", Value=userId, SqlDbType=SqlDbType.NVarChar });",
+      "p.Add(new SqlParameter { ParameterName=\"@p1\", Value=1, SqlDbType=SqlDbType.Bit });",
+      "DataTable dt = SQLData.SQLDataTable(SqlWithParams(SSQL, p));"
+    ],
+    "required_field_check": [
+      "if (string.IsNullOrEmpty(GetDataValue(\"fieldName\"))) {",
+      "    ApiResponse err = new ApiResponse();",
+      "    err.PopUpWindow(new DialogBox(\"Field is required\").HtmlText);",
+      "    return err;",
+      "}"
+    ],
+    "page_navigation_with_param": "response.Navigate(\"UserDetail\", \"userId=\" + userId);",
+    "read_param_on_page": "string userId = QueryValue(\"userId\");",
+    "uicontrol_dropdown_from_db": "new UIControl.Item { Name=\"CountryId\", Label=\"Country\", UIType=UITypes.Dropdown, InitialValues=\"SQL@ SELECT CountryId, CountryName FROM XysCountry ORDER BY CountryName\" }",
+    "uicontrol_checkbox": "new UIControl.Item { Name=\"IsActive\", Label=\"Active\", UIType=UITypes.Checkbox, InitialValues=\"{1|IsActive|*}\" }",
+    "grid_filter_pattern": [
+      "public ApiResponse SearchClicked() {",
+      "    string filterVal = ParamValue(\"FilterBox\");",
+      "    SQLGridInfo.Query.Filters = \"ColumnName like N'%\" + filterVal + \"%'\";",
+      "    SQLGridSection grid = new SQLGridSection(SQLGridInfo);",
+      "    SetGridStyle(grid); // re-apply styles",
+      "    ApiResponse r = new ApiResponse();",
+      "    r.ReplaceSQLGridSection(SQLGridInfo.Id, grid);",
+      "    r.StoreLocalValue(\"FilterBoxValue\", filterVal);",
+      "    return r;",
+      "}"
+    ]
+  },
+  "webenv_header_scripts": {
+    "UserIconScript": "JS for UserIcon avatar/menu",
+    "UserIconStyle": "CSS for UserIcon (use AddCSSFile)",
+    "TimerScript": "JS for Timer countdown",
+    "SideBarScript": "JS for SideBar toggle",
+    "TabStripScript": "JS for TabStrip tab switching",
+    "TreeScript": "JS for TreeView expand/collapse",
+    "TableScrollScript": "JS for scrollable DataGrid",
+    "ParallaxStyle": "CSS for Parallax sections (use AddCSSFile)",
+    "CSSUserIcon": "Alias for UserIconStyle",
+    "CSSParallax": "Alias for ParallaxStyle"
+  },
+  "known_gaps": {
+    "description": "Items referenced in code but not fully documented. AI should acknowledge uncertainty.",
+    "items": [
+      "DialogMsgRequired(string key) — shows required field dialog. Parameter is message key string.",
+      "DialogMsgSaved(string returnParams) — shows saved confirmation with OK button that navigates back. returnParams e.g. 'm=RegionMV'.",
+      "DialogMsgDeleted(string returnParams) — shows deleted confirmation with OK button.",
+      "DialogQstDelete(string confirmMethod) — shows Yes/No delete confirmation. confirmMethod is ByPassCall target.",
+      "DialogMsg(string message) — shows generic message dialog.",
+      "ViewPart class — state container for edit forms. Properties: Data (DataTable), UIControl, Fields (List<NameValueFlag>). Methods: BindData(string sql), Field(string name).",
+      "PageTitle() — built-in helper returning configured TitleSection2 with timer and user icon.",
+      "WriteXysLog(string sql, ref string emsg) — writes audit log to XysLog table.",
+      "GetViewMenuItems() / GetViewButtons() — RBAC-driven menu/button builders. Require XysMenu table configuration."
+    ]
+  }
+}
