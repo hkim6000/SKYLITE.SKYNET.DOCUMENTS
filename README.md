@@ -15,7 +15,7 @@ Download GitHub: https://github.com/hkim6000/SkyNetDemo-AspNetCore<br>
 <br>
 <br>
 
-<b>3. ServiceNet_User_Manual_v3.pdf (5/31/2026)</b><br>
+<h3>ServiceNet_User_Manual_v3.pdf (5/31/2026)</h3><br>
 Product: ServiceNet v0.9 beta
 Project duration : about 200 hours
 Developer : Db design, App architecture design, Business logic, Coding: 5%, 
