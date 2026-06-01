@@ -3,8 +3,7 @@
 
 1. AI_Training_Material 1.0.pdf (3/15/2026)
 2. AI_Training_Material 1.0.json by Claud (3/18/2026)
-<br>
- 
+<br> 
 <h4>SKYLITE framework (C#/VB)</h4>
 Platform: IIS / .Net framework 4.5 + <br>
 <h4>SKYNET framework (C# only)</h4>
@@ -14,8 +13,9 @@ Technical Documents : https://www.theskylite.com/document<br>
 Showcase Demo. Site: https://www.theskylite.com/SkyLiteProject<br>
 Download GitHub: https://github.com/hkim6000/SkyNetDemo-AspNetCore<br>
 <br>
+<br>
 
-<b>3. ServiceNet_User_Manual_v3.pdf (5/31/2026)</b>
+<b>3. ServiceNet_User_Manual_v3.pdf (5/31/2026)</b><br>
 Product: ServiceNet v0.9 beta
 Project duration : about 200 hours
 Developer : Db design, App architecture design, Business logic, Coding: 5%, 
