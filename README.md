@@ -16,11 +16,11 @@ Download GitHub: https://github.com/hkim6000/SkyNetDemo-AspNetCore<br>
 <br>
 
 <h3>ServiceNet_User_Manual_v3.pdf (5/31/2026)</h3><br>
-Product: ServiceNet v0.9 beta
-Project duration : about 200 hours
-Developer : Db design, App architecture design, Business logic, Coding: 5%, 
-Claud(AI) : Code generation 95%
-
+Product: ServiceNet v0.9 beta<br>
+Project duration : about 200 hours<br>
+Developer : Db design, App architecture design, Business logic, Coding: 5%, <br>
+Claud(AI) : Code generation 95%<br>
+<br>
 Overview:
 ServiceNet is a web-based field service management platform for companies that schedule technicians, 
 perform on-site work, and track the parts and outcomes of every job. 
