@@ -20,6 +20,8 @@ Product: ServiceNet v0.9 beta<br>
 Project duration : about 200 hours<br>
 Developer : Db design, App architecture design, Business logic, Coding: 5%, <br>
 Claud(AI) : Code generation 95%<br>
+Framework: SkyNet (ASP.NET Core / .NET 10)<br>
+Architecture: Middleware-based<br>
 <br>
 Overview:
 ServiceNet is a web-based field service management platform for companies that schedule technicians, 
