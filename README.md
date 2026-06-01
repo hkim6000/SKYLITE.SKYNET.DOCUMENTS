@@ -23,6 +23,8 @@ Claud(AI) : Code generation 95%<br>
 Framework: SkyNet (ASP.NET Core / .NET 10)<br>
 Architecture: Middleware-based<br>
 <br>
+Demo: https://www.theskylite.com/servicenet/Login
+<br><br>
 Overview:
 ServiceNet is a web-based field service management platform for companies that schedule technicians, 
 perform on-site work, and track the parts and outcomes of every job. 
