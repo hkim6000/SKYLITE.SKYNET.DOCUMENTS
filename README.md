@@ -14,4 +14,4 @@ Web: https://www.theskylite.com/documents/SkyNet_Developer_Guide.html<br>
 <br>
 © 2026 The SkyLite, HC Kim. All rights reserved.
 SkyNet Framework is proprietary software, free to use under the terms in LICENSE.txt.
-Template and sample code in this repository are MIT-licensed.
+
